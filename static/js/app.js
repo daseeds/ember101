@@ -9,12 +9,12 @@ var App = Ember.Application.create();
 */
 
 App.Store = DS.Store.extend({  
-    adapter: DS.RESTAdapter
+  adapter: DS.RESTAdapter
 });  
 
 DS.RESTAdapter.reopen({
   /*host: 'http://addressbook-api.herokuapp.com'*/
-  host: 'http://localhost:11080'
+  host: 'http://localhost:11080/api'
 });
 
 
@@ -27,43 +27,69 @@ App.Contact = DS.Model.extend({
   notes: DS.attr('string')
 });
 
+App.User = DS.Model.extend({
+  creation_date: DS.attr('string'),
+  creation_author: DS.attr('string'),
+  modification_date: DS.attr('string'),
+  modification_author: DS.attr('string'),
+  avatar: DS.attr('string'),
+  email: DS.attr('string'),
+  certification: DS.attr('string'),
+  level: DS.attr('string')
+});
+
 App.Router.map(function() {
   this.resource('contact', {path: '/contact/:contact_id'});
+  this.resource('users', {path: '/users'});
+  this.resource('user', {path: '/users/:user_id'});
+  this.resource('dive', {path: '/dive/:dive_id'});
 });
 
 App.ApplicationRoute = Ember.Route.extend({
   model: function() {
     //return App.Contact.find();
-    return this.store.find('contact')
+    return this.store.find('contact');
   },
   actions: {
     createUser: function() {
       contact = this.store.createRecord('contact', {
-		  first: '',
-		  last: '',
-		  avatar: ''
-		});
-      
+        first: '',
+        last: '',
+        avatar: ''
+      });
       this.transitionTo('contact', contact);
     },
-
   }
 });
 
 App.ContactRoute = Ember.Route.extend({
   model: function(params) {
-    return this.store.find('contact', params.contact_id)
+    return this.store.find('contact', params.contact_id);
   },
   actions: {
   	save: function() {
   		var contact = this.modelFor('contact');
   		contact.save()
   	},
-     deleteContact: function() {
-		var contact = this.modelFor('contact');
+   deleteContact: function() {
+    var contact = this.modelFor('contact');
 
-		contact.deleteRecord();
-		contact.save();    	
-    }
+    contact.deleteRecord();
+    contact.save();    	
   }
+}
+});
+
+App.UsersRoute =  Ember.Route.extend({
+  model: function() {
+    return this.store.find('user');
+  },
+
+});
+
+App.UserRoute =  Ember.Route.extend({
+  model: function() {
+    return this.store.find('user', params.contact_id);
+  },
+
 });

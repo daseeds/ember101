@@ -11,17 +11,42 @@ import cgi
 from webapp2_extras.routes import RedirectRoute
 from webapp2_extras import jinja2
 import json
+from functools import wraps
 
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.api import mail
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
+from google.appengine.api import users
 
 class Contact(ndb.Model):
 	first = ndb.StringProperty()
 	last = ndb.StringProperty()
 	avatar = ndb.StringProperty()
+
+class User(ndb.Model):
+	google_id = ndb.UserProperty()
+	creation_date = ndb.DateTimeProperty(auto_now_add=True)
+	creation_author = ndb.UserProperty()
+	modification_date = ndb.DateTimeProperty(auto_now =True)
+	modification_author = ndb.UserProperty()
+	avatar = ndb.StringProperty()
+	email = ndb.StringProperty()
+	certification = ndb.StringProperty()
+	level = ndb.StringProperty()
+
+class Dive(ndb.Model):
+	creation_date = ndb.DateTimeProperty(auto_now_add=True)
+	creation_author = ndb.UserProperty()
+	modification_date = ndb.DateTimeProperty(auto_now =True)
+	modification_author = ndb.UserProperty()
+	user = ndb.KeyProperty(User)
+	max_depth = ndb.IntegerProperty()
+	avg_depth = ndb.IntegerProperty()
+	dive_date = ndb.DateTimeProperty()
+	dive_duration = ndb.IntegerProperty()
+	dive_coordinates = ndb.StringProperty()
 
 
 HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
@@ -36,6 +61,15 @@ def jinja2_factory(app):
         #'ndb': ndb, # could be used for ndb.OR in templates
         })
 	return j
+
+def user_protect(f):
+    @wraps(f)
+    def decorated_function(self, *args, **kwargs):
+        user = users.get_current_user()
+        if not user:
+            return self.redirect(users.create_login_url(self.request.uri))
+        return f(self, *args, **kwargs)
+    return decorated_function
 
 class BaseHandler(webapp2.RequestHandler):
 	@webapp2.cached_property
@@ -67,7 +101,35 @@ class BaseHandler(webapp2.RequestHandler):
 
 class RootHandler(BaseHandler):
 	def get(self):
-		return self.render_response("main.html")
+		user = users.get_current_user()
+		if not user:
+			user_url = users.create_login_url(self.request.uri)
+			user_linktext = 'Sign in or Sign up'
+			user_email = ''
+		else:
+			self.register_user(user)
+			user_url = users.create_logout_url('/')
+			user_linktext = 'Sign out'
+			user_email = user.email()
+
+		template_values = {
+			'user_url': user_url,
+			'user_linktext': user_linktext,
+			'user_email': user_email,
+		}	
+		return self.render_response("main.html", **template_values)
+
+	def register_user(self, user):
+		user_test = User.query(User.google_id==user).fetch()
+		if len(user_test) != 0:
+			return
+		new_user = User()
+		new_user.google_id = user
+		new_user.email = user.email()
+		new_user.put()
+
+
+
 
 class ContactsHandler(BaseHandler):
 	def get(self):
@@ -88,7 +150,7 @@ class ContactsHandler(BaseHandler):
 		return self.response.out.write(json.dumps(obj))
 		# return self.response.write('{"contacts":[{"id":"abcdefg","first":"Ryan","last":"Florence","avatar":"http://www.gravatar.com/avatar/749001c9fe6927c4b069a45c2a3d68f7.jpg"},{"id":"123456","first":"Stanley","last":"Stuart","avatar":"https://si0.twimg.com/profile_images/3579590697/63fd9d3854d38fee706540ed6611eba7.jpeg"},{"id":"1a2b3c","first":"Eric","last":"Berry","avatar":"https://si0.twimg.com/profile_images/3254281604/08df82139b53dfa4a3a5adfa7e99426e.jpeg"}]}')
 
-
+	@user_protect
 	def post(self):
 		request = json.loads(cgi.escape(self.request.body))
 		contact = Contact(first = request['contact']['first'],
@@ -112,13 +174,57 @@ class ContactHandler(BaseHandler):
 	def delete(self, contact_id):
 		ndb.Key(Contact, int(contact_id)).delete()
 
+class UsersHandler(BaseHandler):
+	def get(self):
+		users = User.query().fetch()
+		#logging.info(obj)
+		obj = dict()
+		obj['users'] = list()
+		for user in users:
+			current = dict()
+			current['id'] = user.key.id()
+			current['email'] = user.email
+			#current['google_id'] = user.google_id
+			current['avatar'] = user.avatar
+			obj['users'].append(current)
+		logging.info(obj)
+
+		self.response.headers['Content-Type'] = 'application/json'   
+		return self.response.out.write(json.dumps(obj))
+		# return self.response.write('{"contacts":[{"id":"abcdefg","first":"Ryan","last":"Florence","avatar":"http://www.gravatar.com/avatar/749001c9fe6927c4b069a45c2a3d68f7.jpg"},{"id":"123456","first":"Stanley","last":"Stuart","avatar":"https://si0.twimg.com/profile_images/3579590697/63fd9d3854d38fee706540ed6611eba7.jpeg"},{"id":"1a2b3c","first":"Eric","last":"Berry","avatar":"https://si0.twimg.com/profile_images/3254281604/08df82139b53dfa4a3a5adfa7e99426e.jpeg"}]}')
+
+
+	def post(self):
+		request = json.loads(cgi.escape(self.request.body))
+		user = Contact(email = request['user']['email'],
+						  last = request['user']['last'],
+						  avatar = request['user']['avatar'])
+		user.put()
+		# return self.redirect('/#/contacts/')
+
+class UserHandler(BaseHandler):
+	def get(self, contact_id):
+		user.get_by_id(user_id)
+
+	def put(self, contact_id):
+		request = json.loads(cgi.escape(self.request.body))
+		user = Contact.get_by_id(int(contact_id))
+		user.first = request['user']['first']
+		user.last = request['user']['last']
+		user.avatar = request['user']['avatar']
+		user.put()
+
+	def delete(self, contact_id):
+		ndb.Key(User, int(user_id)).delete()
 
 
 
 application = webapp2.WSGIApplication([
 	webapp2.Route(r'/', RootHandler, name='RootHandler'),
-	webapp2.Route(r'/contacts', ContactsHandler, name='ContactsHandler'),
-	webapp2.Route(r'/contacts/<contact_id:([^/]+)?>', ContactHandler, name='ContactHandler'),
+	webapp2.Route(r'/api/contacts', ContactsHandler, name='ContactsHandler'),
+	webapp2.Route(r'/api/contacts/<contact_id:([^/]+)?>', ContactHandler, name='ContactHandler'),
+	webapp2.Route(r'/api/users', UsersHandler),
+	webapp2.Route(r'/api/users/<users_id:([^/]+)?>', UserHandler),
 
 
 	], debug=True)
