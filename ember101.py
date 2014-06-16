@@ -125,6 +125,7 @@ class RootHandler(BaseHandler):
 			return
 		new_user = User()
 		new_user.google_id = user
+		new_user.creation_author = user
 		new_user.email = user.email()
 		new_user.put()
 
@@ -183,9 +184,14 @@ class UsersHandler(BaseHandler):
 		for user in users:
 			current = dict()
 			current['id'] = user.key.id()
-			current['email'] = user.email
-			#current['google_id'] = user.google_id
+			current['creation_date'] = user.creation_date.strftime("%Y-%m-%d %H:%M:%S")
+			current['creation_author'] = user.creation_author.email
+			current['modification_date'] = user.modification_date.strftime("%Y-%m-%d %H:%M:%S")
+			current['modification_author'] = user.modification_author.email
 			current['avatar'] = user.avatar
+			current['email'] = user.email
+			current['certification'] = user.certification
+			current['level'] = user.level
 			obj['users'].append(current)
 		logging.info(obj)
 

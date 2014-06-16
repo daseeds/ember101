@@ -17,7 +17,7 @@ DS.RESTAdapter.reopen({
   host: 'http://localhost:11080/api'
 });
 
-
+// change this to stories for content management on landing page
 App.Contact = DS.Model.extend({
   first: DS.attr('string'),
   last: DS.attr('string'),
