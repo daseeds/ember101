@@ -38,11 +38,20 @@ App.User = DS.Model.extend({
   level: DS.attr('string')
 });
 
+App.Dive = DS.Model.extend({
+  creation_date: DS.attr('string'),
+  creation_author: DS.attr('string'),
+  modification_date: DS.attr('string'),
+  modification_author: DS.attr('string')
+});
+
 App.Router.map(function() {
+  this.resource('app');
   this.resource('contact', {path: '/contact/:contact_id'});
   this.resource('users', {path: '/users'});
   this.resource('user', {path: '/users/:user_id'});
-  this.resource('dive', {path: '/dive/:dive_id'});
+  this.resource('dives', {path: '/dives'});
+  this.resource('dive', {path: '/dives/dive_id'});
 });
 
 App.ApplicationRoute = Ember.Route.extend({
@@ -90,6 +99,20 @@ App.UsersRoute =  Ember.Route.extend({
 App.UserRoute =  Ember.Route.extend({
   model: function() {
     return this.store.find('user', params.contact_id);
+  },
+
+});
+
+App.DivesRoute =  Ember.Route.extend({
+  model: function() {
+    return this.store.find('dive');
+  },
+
+});
+
+App.DiveRoute =  Ember.Route.extend({
+  model: function() {
+    return this.store.find('dive', params.contact_id);
   },
 
 });

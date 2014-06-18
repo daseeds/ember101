@@ -185,9 +185,9 @@ class UsersHandler(BaseHandler):
 			current = dict()
 			current['id'] = user.key.id()
 			current['creation_date'] = user.creation_date.strftime("%Y-%m-%d %H:%M:%S")
-			current['creation_author'] = user.creation_author.email
+			#current['creation_author'] = user.creation_author.email
 			current['modification_date'] = user.modification_date.strftime("%Y-%m-%d %H:%M:%S")
-			current['modification_author'] = user.modification_author.email
+			#current['modification_author'] = user.modification_author.email
 			current['avatar'] = user.avatar
 			current['email'] = user.email
 			current['certification'] = user.certification
@@ -202,35 +202,78 @@ class UsersHandler(BaseHandler):
 
 	def post(self):
 		request = json.loads(cgi.escape(self.request.body))
-		user = Contact(email = request['user']['email'],
+		user = User(email = request['user']['email'],
 						  last = request['user']['last'],
 						  avatar = request['user']['avatar'])
 		user.put()
 		# return self.redirect('/#/contacts/')
 
 class UserHandler(BaseHandler):
-	def get(self, contact_id):
+	def get(self, user_id):
 		user.get_by_id(user_id)
 
-	def put(self, contact_id):
+	def put(self, user_id):
 		request = json.loads(cgi.escape(self.request.body))
-		user = Contact.get_by_id(int(contact_id))
+		user = User.get_by_id(int(user_id))
 		user.first = request['user']['first']
 		user.last = request['user']['last']
 		user.avatar = request['user']['avatar']
 		user.put()
 
-	def delete(self, contact_id):
+	def delete(self, user_id):
 		ndb.Key(User, int(user_id)).delete()
 
+class DivesHandler(BaseHandler):
+	def get(self):
+		dives = Dive.query().fetch()
+		#logging.info(obj)
+		obj = dict()
+		obj['dives'] = list()
+		for dive in dives:
+			current = dict()
+			current['id'] = dive.key.id()
+			current['creation_date'] = dive.creation_date.strftime("%Y-%m-%d %H:%M:%S")
+			current['creation_author'] = dive.creation_author.email
+			current['modification_date'] = dive.modification_date.strftime("%Y-%m-%d %H:%M:%S")
+			current['modification_author'] = dive.modification_author.email
+			obj['users'].append(current)
+		logging.info(obj)
 
+		self.response.headers['Content-Type'] = 'application/json'   
+		return self.response.out.write(json.dumps(obj))
+		# return self.response.write('{"contacts":[{"id":"abcdefg","first":"Ryan","last":"Florence","avatar":"http://www.gravatar.com/avatar/749001c9fe6927c4b069a45c2a3d68f7.jpg"},{"id":"123456","first":"Stanley","last":"Stuart","avatar":"https://si0.twimg.com/profile_images/3579590697/63fd9d3854d38fee706540ed6611eba7.jpeg"},{"id":"1a2b3c","first":"Eric","last":"Berry","avatar":"https://si0.twimg.com/profile_images/3254281604/08df82139b53dfa4a3a5adfa7e99426e.jpeg"}]}')
+
+
+	def post(self):
+		current_user = users.get_current_user()
+		request = json.loads(cgi.escape(self.request.body))
+		user = User.query(User.google_id == current_user).fetch()
+		dive = Dive(user = user)
+		user.put()
+		# return self.redirect('/#/contacts/')
+
+class DiveHandler(BaseHandler):
+	def get(self, dive_id):
+		dive.get_by_id(dive_id)
+
+	def put(self, dive_id):
+		request = json.loads(cgi.escape(self.request.body))
+		user = Contact.get_by_id(int(dive_id))
+		user.first = request['dive']['first']
+		user.last = request['dive']['last']
+		user.avatar = request['dive']['avatar']
+		user.put()
+
+	def delete(self, dive_id):
+		ndb.Key(Dive, int(dive_id)).delete()
 
 application = webapp2.WSGIApplication([
 	webapp2.Route(r'/', RootHandler, name='RootHandler'),
 	webapp2.Route(r'/api/contacts', ContactsHandler, name='ContactsHandler'),
-	webapp2.Route(r'/api/contacts/<contact_id:([^/]+)?>', ContactHandler, name='ContactHandler'),
+	webapp2.Route(r'/api/contacts/<dive_id:([^/]+)?>', ContactHandler, name='ContactHandler'),
 	webapp2.Route(r'/api/users', UsersHandler),
-	webapp2.Route(r'/api/users/<users_id:([^/]+)?>', UserHandler),
-
+	webapp2.Route(r'/api/users/<user_id:([^/]+)?>', UserHandler),
+	webapp2.Route(r'/api/dives', DivesHandler),
+	webapp2.Route(r'/api/dives/<dive_id:([^/]+)?>', DiveHandler),
 
 	], debug=True)

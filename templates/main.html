@@ -10,8 +10,82 @@
   <link href="/static/css/styles.css" rel="stylesheet">
 </head>
 <body>
-{% include 'view_navbar.html' %}
-	<div class="container">
+
+{% raw %}
+<script type="text/x-handlebars" data-template-name="application">
+    {{partial 'navbar'}}
+    <div class="container">
+    {{outlet}}  
+    </div> <!-- /container -->
+    
+</script>
+{% endraw %}
+
+
+   {% raw %}
+   <script type="text/x-handlebars" data-template-name="_navbar">
+   <div class="container">
+
+      <!-- Static navbar -->
+      <div class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+          
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            {{#linkTo "app" class="navbar-brand"}}Log My Dive{{/linkTo}}
+          </div>
+         
+          <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              {{#linkTo "dives" tagName="li"}}
+                <a {{bindAttr href="view.href"}}>Dives</a>
+              {{/linkTo}}
+              {{#linkTo "users" tagName="li"}}
+                <a {{bindAttr href="view.href"}}>Users</a>
+              {{/linkTo}}              
+              <li><a href="#">Link</a></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="#">Action</a></li>
+                  <li><a href="#">Another action</a></li>
+                  <li><a href="#">Something else here</a></li>
+                  <li class="divider"></li>
+                  <li class="dropdown-header">Nav header</li>
+                  <li><a href="#">Separated link</a></li>
+                  <li><a href="#">One more separated link</a></li>
+                </ul>
+              </li>
+                {% if user_email %}
+              <p class="navbar-text">Signed in as {{user_email}}</p>
+              {% endif %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+
+              
+              <a href="{{user_url}}" class="btn btn-default navbar-btn">{{user_linktext}}</a>
+              
+            </ul>
+          </div><!--/.nav-collapse -->
+          
+        </div><!--/.container-fluid -->
+      </div>
+
+
+
+    </div> <!-- /container -->
+</script>
+{% endraw %}
+
+{% raw %}
+
+<script type="text/x-handlebars" data-template-name="app">
+	
 	      <!-- Main component for a primary marketing message or call to action -->
 	      <div class="jumbotron">
 	        <h1>Top rated dives</h1>
@@ -20,13 +94,14 @@
 	          <a class="btn btn-lg btn-primary" href="../../components/#navbar" role="button">Top rated dives</a>
 	        </p>
 	      </div>
+</script>
 
-		{% raw %}
-		<script type="text/x-handlebars">
-		 All Contacts ({{controller.length}})
-		</script>
-		{% endraw %}
-	 </div> <!-- /container -->
+<script type="text/x-handlebars" data-template-name="users">
+All users ({{controller.length}})
+</script>
+{% endraw %}
+
+
 <script src="/static/js/jquery-1.9.1.js"></script>
 <script src="/static/js/handlebars-v1.3.0.js"></script>
 <script src="/static/js/ember.js"></script>
