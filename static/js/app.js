@@ -27,6 +27,7 @@ App.Contact = DS.Model.extend({
   notes: DS.attr('string')
 });
 
+
 App.User = DS.Model.extend({
   creation_date: DS.attr('string'),
   creation_author: DS.attr('string'),
@@ -47,7 +48,6 @@ App.Dive = DS.Model.extend({
 
 App.Router.map(function() {
   this.resource('app');
-  this.resource('contact', {path: '/contact/:contact_id'});
   this.resource('users', {path: '/users'});
   this.resource('user', {path: '/users/:user_id'});
   this.resource('dives', {path: '/dives'});
@@ -59,6 +59,7 @@ App.ApplicationRoute = Ember.Route.extend({
     //return App.Contact.find();
     return this.store.find('contact');
   },
+
   actions: {
     createUser: function() {
       contact = this.store.createRecord('contact', {
@@ -68,7 +69,31 @@ App.ApplicationRoute = Ember.Route.extend({
       });
       this.transitionTo('contact', contact);
     },
+    loading: function(transition, originRoute) {
+      Ember.$('body').addClass('loading');
+      // displayLoadingSpinner();
+
+      // Return true to bubble this event to `FooRoute`
+      // or `ApplicationRoute`.
+      return true;
+    },
+    ready: function(transition, originRoute) {
+    Ember.$('body').removeClass('loading');
+      return true;
+    },
   }
+});
+
+App.ApplicationController = Ember.Controller.extend({
+  userName: 'user name',
+
+
+});
+
+App.IndexRoute = Em.Route.extend({
+    redirect: function() {
+        this.transitionTo('app');   
+    }
 });
 
 App.ContactRoute = Ember.Route.extend({

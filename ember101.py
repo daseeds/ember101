@@ -195,7 +195,8 @@ class UsersHandler(BaseHandler):
 			obj['users'].append(current)
 		logging.info(obj)
 
-		self.response.headers['Content-Type'] = 'application/json'   
+		self.response.headers['Content-Type'] = 'application/json'
+		self.response.headers['Access-Control-Allow-Origin'] = '*'
 		return self.response.out.write(json.dumps(obj))
 		# return self.response.write('{"contacts":[{"id":"abcdefg","first":"Ryan","last":"Florence","avatar":"http://www.gravatar.com/avatar/749001c9fe6927c4b069a45c2a3d68f7.jpg"},{"id":"123456","first":"Stanley","last":"Stuart","avatar":"https://si0.twimg.com/profile_images/3579590697/63fd9d3854d38fee706540ed6611eba7.jpeg"},{"id":"1a2b3c","first":"Eric","last":"Berry","avatar":"https://si0.twimg.com/profile_images/3254281604/08df82139b53dfa4a3a5adfa7e99426e.jpeg"}]}')
 
@@ -228,29 +229,41 @@ class DivesHandler(BaseHandler):
 		dives = Dive.query().fetch()
 		#logging.info(obj)
 		obj = dict()
-		obj['dives'] = list()
+		obj['dive'] = list()
 		for dive in dives:
 			current = dict()
 			current['id'] = dive.key.id()
 			current['creation_date'] = dive.creation_date.strftime("%Y-%m-%d %H:%M:%S")
-			current['creation_author'] = dive.creation_author.email
+			#current['creation_author'] = dive.creation_author.email
 			current['modification_date'] = dive.modification_date.strftime("%Y-%m-%d %H:%M:%S")
-			current['modification_author'] = dive.modification_author.email
-			obj['users'].append(current)
+			#current['modification_author'] = dive.modification_author.email
+			obj['dive'].append(current)
 		logging.info(obj)
 
-		self.response.headers['Content-Type'] = 'application/json'   
+		self.response.headers['Content-Type'] = 'application/json'
+		self.response.headers['Access-Control-Allow-Origin'] = '*'
 		return self.response.out.write(json.dumps(obj))
 		# return self.response.write('{"contacts":[{"id":"abcdefg","first":"Ryan","last":"Florence","avatar":"http://www.gravatar.com/avatar/749001c9fe6927c4b069a45c2a3d68f7.jpg"},{"id":"123456","first":"Stanley","last":"Stuart","avatar":"https://si0.twimg.com/profile_images/3579590697/63fd9d3854d38fee706540ed6611eba7.jpeg"},{"id":"1a2b3c","first":"Eric","last":"Berry","avatar":"https://si0.twimg.com/profile_images/3254281604/08df82139b53dfa4a3a5adfa7e99426e.jpeg"}]}')
-
-
 	def post(self):
-		current_user = users.get_current_user()
 		request = json.loads(cgi.escape(self.request.body))
-		user = User.query(User.google_id == current_user).fetch()
-		dive = Dive(user = user)
-		user.put()
+		dive = Dive()
+		dive.put()
+		
+		#current_user = users.get_current_user()
+		#request = json.loads(cgi.escape(self.request.body))
+		#user = User.query(User.google_id == current_user).fetch()
+		#dive = Dive(user = user)
+		#user.put()
+		self.response.headers['Access-Control-Allow-Origin'] = '*'
+		return self.response.set_status(200)
 		# return self.redirect('/#/contacts/')
+	def options(self):
+		self.response.headers['Content-Type'] = 'application/json'
+		self.response.headers['Access-Control-Allow-Origin'] = '*'
+		self.response.headers['Access-Control-Allow-Headers'] = 'accept, content-type'
+		self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+		return self.response.set_status(200)
+
 
 class DiveHandler(BaseHandler):
 	def get(self, dive_id):

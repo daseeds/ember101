@@ -62,7 +62,7 @@
                 </ul>
               </li>
                 {% if user_email %}
-              <p class="navbar-text">Signed in as {{user_email}}</p>
+              <p class="navbar-text">Signed in as {{userName}}</p>
               {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -99,6 +99,22 @@
 <script type="text/x-handlebars" data-template-name="users">
 All users ({{controller.length}})
 </script>
+
+<script type="text/x-handlebars" data-template-name="dives">
+All dives ({{controller.length}})
+
+  <div class="col-md-4">
+    <div class="list-group">
+      <div class="list-group-item">
+        {{input type="text" class="new-artist" placeholder="New Artist" value=newName}}
+        <button class="btn btn-primary btn-sm new-artist-button" {{action "createArtist"}}
+          {{bind-attr disabled=disabled}}>Add</button>
+      </div>
+    </div>
+  </div>
+
+</script>
+
 {% endraw %}
 
 
